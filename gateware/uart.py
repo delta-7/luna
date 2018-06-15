@@ -14,7 +14,7 @@ def closest_divisor(freq_base, freq_target, max_ppm=None):
 
     return divisor
 
-
+@ResetInserter()
 class UART(Module):
     """
     8N1 UART gatecore
