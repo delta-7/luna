@@ -23,13 +23,19 @@ class UART(Module):
     ----------
     pads : {rx, tx}
 
+    clk_freq : int
+        Base clock domain frequency.
+
+    baud_rate : int
+        Target baud rate.
+
     Attributes
     ----------
     tx_data : octet in
-        Transmit buffer.
+        Transmit buffer. Considered valid when tx_ready is set high.
 
     tx_ready : in
-        Set high to signal that tx_data is stable and TX should begin.
+        User should set high to signal that tx_data is stable and TX should begin.
 
     tx_ack : out
         High when tx core is IDLE, low during transmit.
