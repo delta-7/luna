@@ -183,6 +183,7 @@ class UART(Module):
                 NextValue(self.tx_bitno, self.tx_bitno + 1),
                 If(self.tx_bitno == 7,
                     NextState('STOP')  # stop if we've reached the end of the data to transmit
+                    NextValue(self.tx_bitno, 0),
                 )
             )
         )
