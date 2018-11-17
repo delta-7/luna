@@ -1,0 +1,25 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "98d041ee240ae2112534d2eb0b6a4383d7b7c05d9ac0a173f4980900ffe91c48"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.7"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "migen": {
+            "git": "https://github.com/m-labs/migen.git",
+            "ref": "c285c12905cca3d8db59ce9fba3bbcd7e781e3c3"
+        }
+    },
+    "develop": {}
+}
