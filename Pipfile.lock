@@ -18,7 +18,7 @@
     "default": {
         "migen": {
             "git": "https://github.com/m-labs/migen.git",
-            "ref": "c285c12905cca3d8db59ce9fba3bbcd7e781e3c3"
+            "ref": "17e6d348b995a85b9625f23a30edada3ffc72e9d"
         }
     },
     "develop": {}
