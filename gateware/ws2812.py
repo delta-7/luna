@@ -1,5 +1,6 @@
 from migen import *
-from migen.genlib.fifo import AsyncFIFO
+from migen.fhdl.decorators import ClockDomainsRenamer
+from migen.genlib.fifo import SyncFIFO
 
 from util import closest_divisor
 
@@ -8,10 +9,10 @@ class WS2812PHY(Module):
     def __init__(self, pads, data_width, freq_base, freq_tx=8e5, latch_length=5.41e-5):
         self.pads = pads
 
-        self.tx_ack = Signal()
-        self.tx_ready = Signal()
-        self.tx_latch = Signal()
-        self.data = Signal(data_width)
+        self.tx_ack = Signal() # out
+        self.tx_ready = Signal() # in
+        self.tx_latch = Signal() # in
+        self.data = Signal(data_width) #in
 
 
         ###
@@ -80,29 +81,58 @@ class WS2812PHY(Module):
             )
         )
 
-# class WS2812Controller(Module):
-#     def __init__(self, pads, n_leds, freq_base):
-#         self.writeout = Signal()
+class WS2812Controller(Module):
+    def __init__(self, pads, in_fifo, n_pixels, freq_base, **kwargs):
+        self.write_en = Signal()
 
-#         ###
+        ###
 
-#         self.submodules.phy = WS2812PHY(pads, 24, freq_base)
-#         self.submodules.data = SyncFIFO(24, n_leds) # TODO: ugh should this be AsyncFIFO
+        data = Signal(24)
 
-#         self.submodules.framing_fsm = FSM()
-#         self.framing_fsm.act('IDLE',
-#             If(self.writeout, NextState('TXING')))
+        self.submodules.phy = WS2812PHY(pads, 24, freq_base, **kwargs)
 
-#         # self.framing_fsm.act('TXING',
-#         #     If(self.data.))
+        self.submodules.framing_fsm = FSM()
+        self.framing_fsm.act('IDLE',
+            If(self.write_en,
+                NextState('DEQUEUE')
+            )
+        )
+
+        self.framing_fsm.act('DEQUEUE',
+            If(in_fifo.readable,
+                in_fifo.re.eq(1),
+                NextValue(data, in_fifo.dout),
+                NextState('WRITE'),
+            ).Else(
+                NextState('IDLE'),
+            )
+        )
+
+        self.framing_fsm.act('WRITE',
+            If(self.phy.tx_ack,
+                NextValue(self.phy.data, data),
+                self.phy.tx_ready.eq(1),
+                NextState('WRITE-WAIT')
+            )
+        )
+
+        self.framing_fsm.act('WRITE-WAIT',
+            If(self.phy.tx_ack,
+                NextState('DEQUEUE')
+            )
+        )
 
 if __name__ == '__main__':
     from migen.build.platforms import icestick
     def tb(dut):
-        yield dut.data.eq(0xaaaaaa)
-        yield dut.tx_ready.eq(1)
+        yield from dut.fifo.write(0xaaaaaa)
+        yield from dut.fifo.write(0xbbbbbb)
+        yield from dut.fifo.write(0xffffff)
         yield
-        yield dut.tx_ready.eq(0)
+        yield dut.controller.write_en.eq(1)
+        yield
+        yield dut.controller.write_en.eq(0)
+        yield
         for _ in range(3000): yield
 
     class PhysCore(Module):
@@ -118,39 +148,30 @@ if __name__ == '__main__':
             plat.add_extension(neopixel_gpio)
             neopixel_pads = plat.request('neopixel')
 
-            # self.submodules.controller = WS2812Controller(neopixel_pads, 8, 12000000)
+            N_PIXELS = 8
 
-            self.submodules.phy = WS2812PHY(neopixel_pads, 24, freq_base=12000000, freq_tx=8e5)
-            self.comb += self.phy.data.eq(0xd6afd2)
+            fifo = SyncFIFO(24, N_PIXELS)
 
-            self.submodules.framing_fsm = FSM()
-            self.framing_fsm.act('IDLE',
-                NextValue(self.phy.tx_ready, 1),
-                NextState('TX_DAT'),
-            )
-
-            self.framing_fsm.act('TX_DAT',
-                If(self.phy.tx_ack == 1,
-                    NextValue(self.phy.tx_ready, 0),
-                    NextValue(self.phy.tx_latch, 1),
-                    NextState('TX_LATCH'),
-                )
-            )
-
-            self.framing_fsm.act('TX_LATCH',
-                If(self.phy.tx_ack == 1,
-                    NextState('IDLE')
-                )
-            )
+            self.submodules.controller = WS2812Controller(neopixel_pads, fifo, 8, 12000000)
 
     class _TestPads:
         tx = Signal()
         dbg = Signal()
 
-    plat = icestick.Platform()
-    plat.build(PhysCore(plat), run=True, build_dir="build", build_name="top")
-    plat.create_programmer().flash(0, "build/top.bin")
+    # plat = icestick.Platform()
+    # plat.build(PhysCore(plat), run=True, build_dir="build", build_name="ws2812")
+    # plat.create_programmer().flash(0, "build/top.bin")
 
-    # pads = _TestPads()
+    pads = _TestPads()
     # dut = WS2812PHY(pads, 24, freq_base=20, freq_tx=1, latch_length=1)
-    # run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
+
+    class SimDut(Module):
+        def __init__(self, pads):
+            N_PIXELS = 8
+
+            self.submodules.fifo = SyncFIFO(24, N_PIXELS)
+
+            self.submodules.controller = WS2812Controller(pads, self.fifo, 8, 12000000)
+
+    dut = SimDut(pads)
+    run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
