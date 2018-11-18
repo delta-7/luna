@@ -73,19 +73,13 @@ class TopModule(Module):
             NextState('IDLE'),
         )
 
-        # self.submodules.neopixels = WS2812Controller(neopixel_pads, fifo, 12000000)
-        # self.comb += self.neopixels.write_en.eq(fifo.level == 2)
+        self.submodules.neopixels = WS2812Controller(neopixel_pads, self.fifo, 12000000)
+        self.comb += self.neopixels.write_en.eq(self.fifo.level == 2)
 
         self.submodules += [
-            # add_probe_single("uart_fsm", "rx", self.uart_fsm.ongoing('RX')),
-            # add_probe_single("uart_fsm", "ingest", self.uart_fsm.ongoing('INGEST')),
-            # add_probe_single("uart", "in", self.uart.rx_data),
-            # add_probe_single("top", "data", data),
-            # add_probe_single("restrider", "in", self.restrider.data_in),
-            add_probe_single("restrider", "out", self.restrider.data_out),
-            add_probe_single("restrider", "done", self.restrider.done),
+            # add_probe_single("restrider", "out", self.restrider.data_out),
+            # add_probe_single("restrider", "done", self.restrider.done),
             add_probe_single("fifo", "level", self.fifo.level),
-            # add_probe_single("uart_fsm", "rx", self.uart_fsm.ongoing('RX')),
             add_probe_single("slurp_fsm", "idle", self.slurp_fsm.ongoing('IDLE')),
             add_probe_single("slurp_fsm", "chunk", self.slurp_fsm.ongoing('CHUNK')),
         ]
