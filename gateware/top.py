@@ -17,18 +17,9 @@ class TopModule(Module):
                 IOStandard('LVCMOS33')
             )
         ]
-        microscope_pins = [
-            ('microscope', 0,
-                Subsignal('tx', Pins('PMOD:1')),
-                Subsignal('rx', Pins('PMOD:2')),
-                IOStandard('LVCMOS33')
-            )
-        ]
         plat.add_extension(neopixel_gpio)
-        plat.add_extension(microscope_pins)
 
         neopixel_pads = plat.request('neopixel')
-        microscope_pads = plat.request('microscope')
         leds = plat.request('user_led')
         serial_pads = plat.request('serial')
 
