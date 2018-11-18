@@ -46,30 +46,3 @@ class COBS(Module):
                 NextState('IDLE'),
             )
         )
-
-if __name__ == '__main__':
-    from .test.test_cobs import COBSTestbench
-    dut = COBSTestbench()
-    def tb(dut):
-        # 04666f6f == b'\x04foo'
-        # yield from dut.input_byte(0x04)
-        # yield
-        # yield from dut.input_byte(0x66)
-        # yield
-        # yield from dut.input_byte(0x6f)
-        # yield
-        # yield from dut.input_byte(0x6f)
-
-        # 0266026f == b'\x02f\x02o'
-        yield from dut.input_byte(0x02)
-        yield
-        yield from dut.input_byte(0x66)
-        yield
-        yield from dut.input_byte(0x02)
-        yield
-        yield from dut.input_byte(0x6f)
-        yield
-
-        for _ in range(100): yield
-
-    run_simulation(dut, tb(dut), vcd_name='cobs.vcd')
