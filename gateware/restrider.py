@@ -35,4 +35,8 @@ class Restrider(Module):
                     self.done.eq(0),
                 )
             ),
+
+            If(self.out_read_ack,
+                self.done.eq(0),
+            )
         ]
