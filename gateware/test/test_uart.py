@@ -1,5 +1,5 @@
 from migen import *
-from gateware.uart import UART
+from ..uart import UART
 
 def _test_rx(rx, dut):
     def wait_bit():
