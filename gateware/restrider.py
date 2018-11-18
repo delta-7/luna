@@ -11,6 +11,7 @@ class Restrider(Module):
         # out
         self.data_out = Signal(to_n)
         self.done = Signal()
+        self.out_read_ack = Signal()
 
         ####
 
@@ -21,12 +22,17 @@ class Restrider(Module):
         chunks = Array(Signal(from_n) for _ in range(total_n_chunks))
 
         self.comb += [
-            self.done.eq(chunk_counter == total_n_chunks),
             self.data_out.eq(Cat(*reversed(chunks)))
         ]
         self.sync += [
             If(self.latch_data,
                 chunks[chunk_counter].eq(self.data_in),
-                chunk_counter.eq(chunk_counter+1),
-            )
+                If(chunk_counter == total_n_chunks - 1,
+                    chunk_counter.eq(0),
+                    self.done.eq(1),
+                ).Else(
+                    chunk_counter.eq(chunk_counter+1),
+                    self.done.eq(0),
+                )
+            ),
         ]
