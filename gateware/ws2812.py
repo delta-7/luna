@@ -2,7 +2,7 @@ from migen import *
 from migen.fhdl.decorators import ClockDomainsRenamer
 from migen.genlib.fifo import SyncFIFO
 
-from util import closest_divisor
+from .util import closest_divisor
 
 
 class WS2812PHY(Module):
@@ -82,7 +82,7 @@ class WS2812PHY(Module):
         )
 
 class WS2812Controller(Module):
-    def __init__(self, pads, in_fifo, n_pixels, freq_base, **kwargs):
+    def __init__(self, pads, in_fifo, freq_base, **kwargs):
         self.write_en = Signal()
 
         ###
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
             fifo = SyncFIFO(24, N_PIXELS)
 
-            self.submodules.controller = WS2812Controller(neopixel_pads, fifo, 8, 12000000)
+            self.submodules.controller = WS2812Controller(neopixel_pads, fifo, 12000000)
 
     class _TestPads:
         tx = Signal()
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
             self.submodules.fifo = SyncFIFO(24, N_PIXELS)
 
-            self.submodules.controller = WS2812Controller(pads, self.fifo, 8, 12000000)
+            self.submodules.controller = WS2812Controller(pads, self.fifo, 12000000)
 
     dut = SimDut(pads)
     # run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
