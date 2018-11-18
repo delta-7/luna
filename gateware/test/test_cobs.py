@@ -67,3 +67,10 @@ class COBSTestCase(TestCase):
     def test_basic_cobs(self, tb):
         yield from self.tb.assert_inout([0x02, 0x66, 0x02, 0x6f],
             [0x66, 0x00, 0x6f])
+
+    @simulation_test
+    def test_longer_cobs(self, tb):
+        data = b'Lorem\0ipsum\0dolor\0sit\0amet,\0consectetur\0adipiscing\0elit,\0sed\0do\0eiusmod\0tempor\0incididunt'
+        encoded = cobs_encode(data)
+
+        yield from self.tb.assert_inout(encoded, data)
