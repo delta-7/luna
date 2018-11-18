@@ -22,9 +22,20 @@ class RestriderTestCase(TestCase):
 
     @simulation_test
     def test_basic_restride(self, tb):
+        yield from self.assertSignal(self.tb.restrider.done, 0)
         yield from self.tb.write_in(0x80)
         yield from self.tb.write_in(0x40)
         yield from self.tb.write_in(0x20)
         yield
         yield from self.assertSignal(self.tb.restrider.done, 1)
         yield from self.assertSignal(self.tb.restrider.data_out, 0x804020)
+
+
+        yield from self.tb.write_in(0xaa)
+        yield
+        yield from self.assertSignal(self.tb.restrider.done, 0)
+        yield
+        yield from self.tb.write_in(0xbb)
+        yield from self.tb.write_in(0xcc)
+        yield
+        yield from self.assertSignal(self.tb.restrider.done, 1)
