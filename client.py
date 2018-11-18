@@ -11,7 +11,7 @@ with serial.Serial(sys.argv[1], 115200) as ser:
         pixels[i%8] = 0xffffff
         for value in pixels:
             dat = struct.pack('>L', value)[1:]
-            print(dat.hex())
+            #print(dat.hex())
             ser.write(dat)
         time.sleep(0.1)
 
