@@ -182,7 +182,7 @@ class UART(Module):
                 NextValue(self.tx_shift, Cat(self.tx_shift[1:8], 0)), # shift the data through the register
                 NextValue(self.tx_bitno, self.tx_bitno + 1),
                 If(self.tx_bitno == 7,
-                    NextState('STOP')  # stop if we've reached the end of the data to transmit
+                    NextState('STOP'), # stop if we've reached the end of the data to transmit
                     NextValue(self.tx_bitno, 0),
                 )
             )

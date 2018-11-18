@@ -158,8 +158,8 @@ if __name__ == '__main__':
         tx = Signal()
         dbg = Signal()
 
-    # plat = icestick.Platform()
-    # plat.build(PhysCore(plat), run=True, build_dir="build", build_name="ws2812")
+    plat = icestick.Platform()
+    plat.build(PhysCore(plat), run=True, build_dir="build", build_name="ws2812")
     # plat.create_programmer().flash(0, "build/top.bin")
 
     pads = _TestPads()
@@ -174,4 +174,4 @@ if __name__ == '__main__':
             self.submodules.controller = WS2812Controller(pads, self.fifo, 8, 12000000)
 
     dut = SimDut(pads)
-    run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
+    # run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
