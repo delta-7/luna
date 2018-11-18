@@ -80,8 +80,9 @@ class TopModule(Module):
             # add_probe_single("restrider", "out", self.restrider.data_out),
             # add_probe_single("restrider", "done", self.restrider.done),
             add_probe_single("fifo", "level", self.fifo.level),
-            add_probe_single("slurp_fsm", "idle", self.slurp_fsm.ongoing('IDLE')),
-            add_probe_single("slurp_fsm", "chunk", self.slurp_fsm.ongoing('CHUNK')),
+            add_probe_single("fifo", "dout", self.fifo.dout),
+            # add_probe_single("slurp_fsm", "idle", self.slurp_fsm.ongoing('IDLE')),
+            # add_probe_single("slurp_fsm", "chunk", self.slurp_fsm.ongoing('CHUNK')),
         ]
 
         self.submodules += Microscope(microscope_pads, 12000000)

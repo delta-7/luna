@@ -108,9 +108,9 @@ class WS2812Controller(Module):
             )
         )
 
+        self.comb += self.phy.data.eq(data)
         self.framing_fsm.act('WRITE',
             If(self.phy.tx_ack,
-                NextValue(self.phy.data, data),
                 self.phy.tx_ready.eq(1),
                 NextState('WRITE-WAIT')
             )
@@ -125,9 +125,8 @@ class WS2812Controller(Module):
 if __name__ == '__main__':
     from migen.build.platforms import icestick
     def tb(dut):
-        yield from dut.fifo.write(0xaaaaaa)
-        yield from dut.fifo.write(0xbbbbbb)
-        yield from dut.fifo.write(0xffffff)
+        yield from dut.fifo.write(0x00ffff)
+        yield from dut.fifo.write(0xff00ff)
         yield
         yield dut.controller.write_en.eq(1)
         yield
@@ -158,13 +157,11 @@ if __name__ == '__main__':
         tx = Signal()
         dbg = Signal()
 
-    plat = icestick.Platform()
-    plat.build(PhysCore(plat), run=True, build_dir="build", build_name="ws2812")
+    # plat = icestick.Platform()
+    # plat.build(PhysCore(plat), run=True, build_dir="build", build_name="ws2812")
     # plat.create_programmer().flash(0, "build/top.bin")
 
     pads = _TestPads()
-    # dut = WS2812PHY(pads, 24, freq_base=20, freq_tx=1, latch_length=1)
-
     class SimDut(Module):
         def __init__(self, pads):
             N_PIXELS = 8
@@ -174,4 +171,4 @@ if __name__ == '__main__':
             self.submodules.controller = WS2812Controller(pads, self.fifo, 12000000)
 
     dut = SimDut(pads)
-    # run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
+    run_simulation(dut, tb(dut), vcd_name='ws2812.vcd')
