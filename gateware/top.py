@@ -6,7 +6,6 @@ from migen.build.generic_platform import Subsignal, IOStandard, Pins
 from .uart import UART
 from .ws2812 import WS2812Controller
 from .restrider import Restrider
-from microscope import *
 from migen.genlib.io import CRG
 
 
@@ -74,23 +73,10 @@ class TopModule(Module):
         )
 
         self.submodules.neopixels = WS2812Controller(neopixel_pads, self.fifo, 12000000)
-        self.comb += self.neopixels.write_en.eq(self.fifo.level == 2)
-
-        self.submodules += [
-            # add_probe_single("restrider", "out", self.restrider.data_out),
-            # add_probe_single("restrider", "done", self.restrider.done),
-            add_probe_single("fifo", "level", self.fifo.level),
-            add_probe_single("fifo", "dout", self.fifo.dout),
-            # add_probe_single("slurp_fsm", "idle", self.slurp_fsm.ongoing('IDLE')),
-            # add_probe_single("slurp_fsm", "chunk", self.slurp_fsm.ongoing('CHUNK')),
-        ]
-
-        self.submodules += Microscope(microscope_pads, 12000000)
+        self.comb += self.neopixels.write_en.eq(self.fifo.level == N_PIXELS)
 
 if __name__ == '__main__':
     plat = icestick.Platform()
     top = TopModule(plat)
-    clock = plat.request(plat.default_clk_name)
-    top.submodules += CRG(clock)
     plat.build(top, run=True, build_dir="build")
     plat.create_programmer().flash(0, "build/top.bin")
