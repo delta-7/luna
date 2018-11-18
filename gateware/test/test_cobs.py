@@ -43,17 +43,16 @@ class COBSTestbench(Module):
         yield self.cobs.inclk.eq(0)
         # yield
 
-    def assert_inout(self, inbs, outbs):
-        yield from self.input_byte(inbs[0])
-        yield; yield
-        for (inb, outb) in zip(inbs[1:], outbs):
-            print(hex(inb), hex(outb))
+    def unstuff(self, inbs):
+        produced = []
+        for inb in inbs:
             yield from self.input_byte(inb)
-            assert (yield self.cobs.outrdy) == 1
-            assert (yield self.cobs.dout) == outb
             yield
-            assert (yield self.cobs.outrdy) == 0
+            if (yield self.cobs.outrdy) == 1:
+                produced.append((yield self.cobs.dout))
             yield
+
+        return produced
 
 
 class COBSTestCase(TestCase):
@@ -65,12 +64,44 @@ class COBSTestCase(TestCase):
 
     @simulation_test
     def test_basic_cobs(self, tb):
-        yield from self.tb.assert_inout([0x02, 0x66, 0x02, 0x6f],
-            [0x66, 0x00, 0x6f])
+        produced = yield from self.tb.unstuff([0x02, 0x66, 0x02, 0x6f])
+        self.assertEqual(produced, [0x66, 0x00, 0x6f])
 
     @simulation_test
     def test_longer_cobs(self, tb):
         data = b'Lorem\0ipsum\0dolor\0sit\0amet,\0consectetur\0adipiscing\0elit,\0sed\0do\0eiusmod\0tempor\0incididunt'
         encoded = cobs_encode(data)
 
-        yield from self.tb.assert_inout(encoded, data)
+        produced = yield from self.tb.unstuff(encoded)
+        self.assertEqual(bytes(produced), data)
+
+    @simulation_test
+    def test_more_than_one_block(self, tb):
+        data = (
+            b'Lorem\0ipsum\0dolor\0sit\0amet,\0consectetur\0adipiscing\0elit,\0sed\0do\0eiusmod\0tempor\0incididunt\0ut\0labore\0et\0dolore '
+            b'magna\0aliqua.\0Ut\0enim\0ad\0minim\0veniam,\0quis\0nostrud\0exercitation\0ullamco\0laboris nisi ut aliquip ex ea commodo '
+            b'consequat. Duis aute irure dolor in reprehenderit\0in\0voluptate\0velit\0esse\0cillum\0dolore\0eu\0fugiat\0nulla pariatur. '
+            b'Excepteur sint occaecat cupidatat non proident, sunt\0in\0culpa\0qui\0officia\0deserunt\0mollit\0anim\0id\0est\0laborum.'
+        )
+        encoded = cobs_encode(data)
+
+        produced = yield from self.tb.unstuff(encoded)
+        print(bytes(produced))
+        print(data)
+        self.assertEqual(bytes(produced), data)
+
+
+    @simulation_test
+    def test_more_than_one_block_no_zeros(self, tb):
+        data = (
+            b'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore '
+            b'magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo '
+            b'consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. '
+            b'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+        )
+        encoded = cobs_encode(data)
+
+        produced = yield from self.tb.unstuff(encoded)
+        print(bytes(produced))
+        print(data)
+        self.assertEqual(bytes(produced), data)
